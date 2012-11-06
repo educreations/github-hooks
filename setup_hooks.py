@@ -34,9 +34,6 @@ if __name__ == '__main__':
             if hook.active
         )
 
-        if not hooks:
-            continue
-
         print "Configuring hooks for " + repo.name + ":"
 
         for name, config in base_hooks.items():
