@@ -26,17 +26,5 @@ You can easily define them when running the script with:
 GITHUB_USER='streeter' GITHUB_PASSWORD='XXXXX' GITHUB_ORGANIZATION='some-org' ./setup_hooks.py
 ```
 
-In addition, you will need to configure the `base_hooks` dictionary inside of
-the script. For example, if you want to add an email post commit hook, add the
-following definition into the `base_hooks` dictionary:
-
-```python
-'email': {
-    'secret': '',
-    'address': 'list@company.com',
-    'send_from_author': '0',
-}
-```
-
-You would likewise do this for other hooks. Then run the script and it will
-ensure those all exist on each repo in the organization.
+Or, you can set them as arguments to the `setup_hooks.py` script. Run the script
+with the `-h` option to see them all.
