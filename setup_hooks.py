@@ -21,7 +21,7 @@ class Hooks(object):
 
     def dump(self):
         assert len(self.hooks) > 0, "We have to have some hooks to dump!"
-        data = json.dumps(self.hooks)
+        data = json.dumps(self.hooks, indent=4)
         with open(self.filename, 'w') as f:
             f.write(data)
 
@@ -37,19 +37,20 @@ class Hooks(object):
         print("  Configuring hooks for " + repo.name + ":")
         repo_hooks = self.hooks_for_repo(repo)
 
-        for name, config in self.hooks.items():
+        for name, data in self.hooks.items():
             if name not in repo_hooks:
                 print("  - creating %s hook..." % name)
                 repo.create_hook(
                     name=name,
-                    config=config,
+                    config=data['config'],
                     active=True,
+                    events=data['events'],
                 )
             else:
                 print("    - editing %s hook..." % name)
                 # Make sure hooks are configured correctly
                 hook = repo_hooks.get(name)
-                hook.edit(name=name, config=config)
+                hook.edit(name=name, config=data['config'], events=data['events'])
 
     def set_hooks_on_repo(self, repo):
         print("  Setting hooks for " + repo.name + ":")
