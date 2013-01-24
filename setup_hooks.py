@@ -111,7 +111,10 @@ if __name__ == '__main__':
         repo_hooks = Hooks.hooks_for_repo(repo)
 
         new_hooks = dict(
-            (name, hook.config)
+            (name, {
+                'config': hook.config,
+                'events': hook.events,
+            })
             for name, hook in repo_hooks.items()
         )
 
