@@ -52,15 +52,16 @@ class Hooks(object):
                 hook = repo_hooks.get(name)
                 hook.edit(name=name, config=data['config'], events=data['events'])
 
-    def set_hooks_on_repo(self, repo):
-        print("  Setting hooks for " + repo.name + ":")
+    def delete_hooks_on_repo(self, repo):
+        print("  Deleting hooks for " + repo.name + ":")
         repo_hooks = self.hooks_for_repo(repo)
 
         # Remove all repo hooks
         for name, hook in repo_hooks.items():
             hook.delete()
 
-        # Create / update all hooks on the repo
+    def set_hooks_on_repo(self, repo):
+        self.delete_hooks_on_repo(repo)
         self.create_or_update_hooks_for_repo(repo)
 
 
@@ -74,6 +75,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Configure repository hooks on GitHub")
     parser.add_argument('-l', '--location', help="The path to the file to store the hooks at.", default="hooks.json")
     parser.add_argument('-d', '--download', help="The name of a repository to download hooks from.")
+    parser.add_argument('-D', '--delete', action='store_true', help="Delete all the hooks from a repository.")
     parser.add_argument('-f', '--force', action='store_true', help="Overwrite all hooks on all organization repos.")
     parser.add_argument('-u', '--username', default=os.environ.get('GITHUB_USER'), help="A GitHub username.")
     parser.add_argument('-p', '--password', default=os.environ.get('GITHUB_PASSWORD'), help="A GitHub password.")
@@ -127,6 +129,11 @@ if __name__ == '__main__':
 
         for repo in repos:
             hooks.set_hooks_on_repo(repo)
+    elif args.delete:
+        hooks.load()
+        print("Deleting all hooks from the repository...")
+        for repo in repos:
+            hooks.delete_hooks_on_repo(repo)
     else:
         hooks.load()
         print("Updating the hooks for all repos...")
