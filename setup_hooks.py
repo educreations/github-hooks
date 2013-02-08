@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 
 import argparse
+import getpass
 import json
 import os
+import sys
 
 from github import Github
+import requests
 
 
 class Hooks(object):
@@ -65,31 +68,49 @@ class Hooks(object):
         self.create_or_update_hooks_for_repo(repo)
 
 
+def get_token(token_file):
+    try:
+        with open(token_file) as tf:
+            tokens = json.load(tf)
+    except:
+        username = raw_input('GitHub username: ')
+        password = getpass.getpass('GitHub password: ')
+        response = requests.post(
+            'https://api.github.com/authorizations',
+            auth=(username, password),
+            data=json.dumps({
+                'note': 'setup-github-hooks',
+                'scopes': ['repo'],
+            }))
+        if response != 200:
+            print >>sys.stderr, response.text
+            response.raise_for_status()
+        tokens = response.json()
+        with open(token_file, 'w') as tf:
+            os.chmod(args.token_file, 0600)
+            json.dump(tokens, tf)
+    return tokens['token']
+
+
 if __name__ == '__main__':
-
-    for v in ('GITHUB_USER', 'GITHUB_PASSWORD', 'GITHUB_ORGANIZATION'):
-        if os.environ.get(v) is None:
-            print("%s is a required environment variable. Set and re-run" % v)
-            exit(-1)
-
     parser = argparse.ArgumentParser(description="Configure repository hooks on GitHub")
     parser.add_argument('-l', '--location', help="The path to the file to store the hooks at.", default="hooks.json")
     parser.add_argument('-d', '--download', help="The name of a repository to download hooks from.")
     parser.add_argument('-D', '--delete', action='store_true', help="Delete all the hooks from a repository.")
     parser.add_argument('-f', '--force', action='store_true', help="Overwrite all hooks on all organization repos.")
-    parser.add_argument('-u', '--username', default=os.environ.get('GITHUB_USER'), help="A GitHub username.")
-    parser.add_argument('-p', '--password', default=os.environ.get('GITHUB_PASSWORD'), help="A GitHub password.")
     parser.add_argument('-o', '--organization', default=os.environ.get('GITHUB_ORGANIZATION'), help="A GitHub organization name.")
+    parser.add_argument('-t', '--token_file', default=os.path.expanduser('~/.github-hooks-token'), help="A file to store the GitHub OAuth token")
 
     args = parser.parse_args()
 
-    if not args.username or not args.password or not args.organization:
-        print("Username, password and organization are required on the command line or environment variables!")
+    if not args.organization:
+        print("Organization is required on the command line (-o) or environment variable (GITHUB_ORGANIZATION)!")
         parser.print_help()
         exit(-1)
 
     # Create the API client
-    gh = Github(args.username, args.password)
+    token = get_token(args.token_file)
+    gh = Github(token)
 
     # Get the organization
     org = gh.get_organization(args.organization)
