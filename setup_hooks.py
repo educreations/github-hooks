@@ -7,7 +7,6 @@ import os
 import sys
 
 from github import Github
-import requests
 
 
 class Hooks(object):
@@ -71,25 +70,19 @@ class Hooks(object):
 def get_token(token_file):
     try:
         with open(token_file) as tf:
-            tokens = json.load(tf)
+            token = tf.read()
     except:
         username = raw_input('GitHub username: ')
         password = getpass.getpass('GitHub password: ')
-        response = requests.post(
-            'https://api.github.com/authorizations',
-            auth=(username, password),
-            data=json.dumps({
-                'note': 'setup-github-hooks',
-                'scopes': ['repo'],
-            }))
-        if response != 200:
-            print >>sys.stderr, response.text
-            response.raise_for_status()
-        tokens = response.json()
+        client = Github(username, password)
+        auth = client.get_user().create_authorization(
+            scopes=['repo'],
+            note='setup-github-hooks')
+        token = auth.token
         with open(token_file, 'w') as tf:
             os.chmod(args.token_file, 0600)
-            json.dump(tokens, tf)
-    return tokens['token']
+            tf.write(token)
+    return token
 
 
 if __name__ == '__main__':
