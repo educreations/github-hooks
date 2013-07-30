@@ -41,14 +41,14 @@ class Hooks(object):
 
         for name, data in self.hooks.items():
             if name not in repo_hooks:
-                print("  - creating %s hook..." % name)
+                print("    - creating %s hook..." % name)
                 repo.create_hook(
                     name=name,
                     config=data['config'],
                     active=True,
                     events=data['events'],
                 )
-            else:
+            elif data != self.hook_data(repo_hooks[name]):
                 print("    - editing %s hook..." % name)
                 # Make sure hooks are configured correctly
                 hook = repo_hooks.get(name)
@@ -65,6 +65,13 @@ class Hooks(object):
     def set_hooks_on_repo(self, repo):
         self.delete_hooks_on_repo(repo)
         self.create_or_update_hooks_for_repo(repo)
+
+    @staticmethod
+    def hook_data(hook):
+        return {
+            'config': hook.config,
+            'events': hook.events,
+        }
 
 
 def get_token(token_file):
@@ -126,13 +133,10 @@ if __name__ == '__main__':
 
         repo_hooks = Hooks.hooks_for_repo(repo)
 
-        new_hooks = dict(
-            (name, {
-                'config': hook.config,
-                'events': hook.events,
-            })
+        new_hooks = {
+            name: Hooks.hook_data(hook)
             for name, hook in repo_hooks.items()
-        )
+        }
 
         # Save the hooks to the file
         hooks.hooks = new_hooks
