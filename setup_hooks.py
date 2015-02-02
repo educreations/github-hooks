@@ -29,11 +29,11 @@ class Hooks(object):
 
     @classmethod
     def hooks_for_repo(cls, repo):
-        return dict(
-            (hook.name, hook)
+        return {
+            hook.name: hook
             for hook in repo.get_hooks()
             if hook.active
-        )
+        }
 
     def create_or_update_hooks_for_repo(self, repo):
         print("  Configuring hooks for " + repo.name + ":")
